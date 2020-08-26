@@ -1,52 +1,48 @@
-# Guestbook
 
-Guestbook is an example application showing basic usage of Google App
-Engine. Users can read & write text messages and optionally log-in with
-their Google account. Messages are stored in App Engine (NoSQL)
-High Replication Datastore (HRD) and retrieved using a strongly consistent
-(ancestor) query.
-
-## Products
-- [App Engine][1]
-
-## Language
-- [Python][2]
-
-## APIs
-- [NDB Datastore API][3]
-- [Users API][4]
-
-## Dependencies
-- [webapp2][5]
-- [jinja2][6]
-- [Twitter Bootstrap][7]
-
-[1]: https://developers.google.com/appengine
-[2]: https://python.org
-[3]: https://developers.google.com/appengine/docs/python/ndb/
-[4]: https://developers.google.com/appengine/docs/python/users/
-[5]: http://webapp-improved.appspot.com/
-[6]: http://jinja.pocoo.org/docs/
-[7]: http://twitter.github.com/bootstrap/
+## *This is a trained model of [PEGASUS](https://github.com/google-research/pegasus) on cnn_dailymail* dataset. 
 
 
-## E2E Test for this sample app
 
-A Makefile is provided to deploy and run the e2e test.
+# Requirements - 
+> numpy\
+sentencepiece\
+tensorflow==2.2.0
 
-To run:
+# PEGASUS library
 
-     export GAE_PROJECT=your-project-id
-     make
+Pre-training with Extracted Gap-sentences for Abstractive SUmmarization
+Sequence-to-sequence models, or PEGASUS, uses self-supervised objective Gap
+Sentences Generation (GSG) to train a transformer encoder-decoder model. The
+paper can be found on [arXiv](https://arxiv.org/abs/1912.08777). ICML 2020 accepted.
 
-To manually run, install the requirements
 
-    pip install -r e2e/requirements-dev.txt
+!['screen'](https://1.bp.blogspot.com/-TSor4o51jGI/Xt50lkj6blI/AAAAAAAAGDs/TrDe9jv13WEwk9NQNebQL63jtY8n6JFGwCLcBGAsYHQ/s640/image1.gif)
 
-Set the environment variable to point to your deployed app:
 
-    export GUESTBOOK_URL="http://guestbook-test-dot-useful-temple-118922.appspot.com/"
+If you use this code or these models, please cite the following paper:
+```
+@misc{zhang2019pegasus,
+    title={PEGASUS: Pre-training with Extracted Gap-sentences for Abstractive Summarization},
+    author={Jingqing Zhang and Yao Zhao and Mohammad Saleh and Peter J. Liu},
+    year={2019},
+    eprint={1912.08777},
+    archivePrefix={arXiv},
+    primaryClass={cs.CL}
+}
+```
 
-Finally, run the test
+# Usage
 
-    python e2e/test_e2e.py
+To run the demo, please download pre-trained model on cnn_dailymail from [here](https://drive.google.com/file/d/1FVzZto4bf5_TCmRy3tNeirhPDdLrvum5/view?usp=sharing) or gigaword from [here](https://drive.google.com/file/d/1ZF2qO6bAnsTF2LSndLMir3e7NrlFL288/view?usp=sharing). Unzip it and put it to `model/`, or anywhere
+really if you just specify its location and where your article file is. Suppose your article is this [one](https://thehill.com/policy/national-security/507744-russian-hackers-return-to-spotlight-with-vaccine-research-attack)
+
+`python test_example.py --article example_article --model_dir model/ --model_name cnn_dailymail`
+
+You will see this output - `PREDICTION >>  The hacking group known as NC29 is largely believed to operate as part of Russia's security services .<n>The three countries allege that it is carrying out a persistent and ongoing cyber campaign to steal intellectual property about a possible coronavirus vaccine .
+`
+
+# Export Model
+
+To export a model you have trained, please place the `ExportModel.ipynb` inside the [PEGASUS](https://github.com/google-research/pegasus) folder.
+Just run the script inside by specifying which data model you want to export.
+ 
