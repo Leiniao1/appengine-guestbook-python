@@ -18,11 +18,22 @@
 import os
 import urllib
 
+import text_eval
+import public_parsing_ops
+import tensorflow as tf
+import numpy as np
+
 from google.appengine.api import users
 from google.appengine.ext import ndb
+from tensorflow.python.lib.io import file_io
 
 import jinja2
 import webapp2
+
+
+_SPM_VOCAB = 'ckpt/c4.unigram.newline.10pct.96000.model'
+encoder = public_parsing_ops.create_text_encoder("sentencepiece",
+                                                 _SPM_VOCAB)
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -32,6 +43,9 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 DEFAULT_GUESTBOOK_NAME = 'default_guestbook'
 
+shapes = {
+    'cnn_dailymail': (1024, 128),
+}
 
 # We set a parent key on the 'Greetings' to ensure that they are all
 # in the same entity group. Queries across the single entity group
@@ -110,7 +124,28 @@ class Guestbook(webapp2.RequestHandler):
                     identity=users.get_current_user().user_id(),
                     email=users.get_current_user().email())
 
-        greeting.content = self.request.get('content')
+        text = self.request.get('content')
+        shape,_ = shapes['cnn_dailymail']
+        input_ids = encoder.encode(text)
+        inputs = np.zeros(shape)
+        idx = len(input_ids)
+        if idx>shape: idx =shape
+
+        inputs[:idx] = input_ids[:idx]
+        
+        model_file = file_io.FileIO('gs://pagasus1.appspot.com/cnn_dailymail', mode='rb')
+        temp_model_location = './cnn_dailymail'
+        temp_model_file = open(temp_model_location, 'wb')
+        temp_model_file.write(model_file.read())
+        temp_model_file.close()
+        model_file.close()
+        
+        imported = tf.saved_model.load(temp_model_location, tags='serve')
+        example = tf.train.Example()
+        example.features.feature["inputs"].int64_list.value.extend(inputs.astype(int))
+        output = imported.signatures['serving_default'](examples=tf.constant([example.SerializeToString()]))
+        
+        greeting.content = text_eval.ids2str(encoder, output['outputs'].numpy(), None)
         greeting.put()
 
         query_params = {'guestbook_name': guestbook_name}
